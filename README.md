@@ -1,84 +1,48 @@
 # PaceFix
 
-PaceFix is an iterative LLM-based Automated Program Repair (LLM-APR)
-framework that improves multi-candidate repair through
-functional-progress-guided state decision and cross-candidate structural
-feedback.
+PaceFix is a multi-candidate iterative framework for LLM-based automated program repair. It combines functional-progress-constrained state decision with progress-conditioned cross-candidate structural feedback.
 
-## Overview
+## Approach
 
-PaceFix extends the standard Generate-and-Validate repair process with
-two mechanisms:
+PaceFix contains two complementary mechanisms:
 
--   **State Decision**: selects the next repair state among candidates
-    with maximum functional progress using program evidence.
--   **Progress-Conditioned Cross-Candidate Structural Feedback (PCSF)**:
-    extracts structural signals from candidate patches and provides
-    feedback for subsequent repair iterations.
-
-## Environment
-
-The experiments mainly require:
-
--   Python 3.x
--   Defects4J benchmark
--   Java development environment
--   LLM API access
-
-Install the required dependencies before running experiments.
-
-## Installation
-
-Clone the repository:
-
-``` bash
-git clone https://github.com/BabyJeff616/paceFix.git
-cd paceFix
-```
-
-Install dependencies:
-
-``` bash
-pip install -r requirements.txt
-```
-
-Configure API keys and experiment settings according to the provided
-configuration files.
-
-## Running Experiments
-
-The experiment pipeline includes:
-
-1.  LLM-based candidate patch generation.
-2.  Patch compilation and test validation.
-3.  State Decision and PCSF feedback generation.
-4.  Iterative repair until termination.
-
-Example:
-
-``` bash
-python main.py --config <config_file>
-```
-
-The exact command depends on the experiment configuration.
+- **State Decision** selects the candidate inherited as the next repair state. Compilation and test results first determine the maximum-progress candidate set. Failure-related dataflow evidence is used when multiple candidates achieve the same maximum functional progress.
+- **Progress-Conditioned Cross-Candidate Structural Feedback (PCSF)** extracts repeated local structural signals from high-progress candidates and incorporates them into the next-round prompt.
 
 ## Dataset
 
-PaceFix is evaluated on Defects4J benchmarks, including:
+The experiments use 483 single-function bugs from Defects4J:
 
--   Defects4J v1.2
--   Defects4J v2.0
--   Single-function bug repair scenarios
+| Dataset | Number of bugs |
+|---|---:|
+| Defects4J v1.2 | 255 |
+| Defects4J v2.0 | 228 |
 
-## Evaluation
+The evaluation assumes perfect function-level fault localization.
 
-The framework evaluates:
+## Environment
 
--   Plausible fixes
--   Correct fixes
--   Component ablation
--   Cross-LLM generalization
+The experimental environment includes:
 
-## License
+- Linux
+- Defects4J 2.0.0
+- OpenJDK 8 for compilation and testing
+- OpenJDK 21 for program analysis
+- Joern 4.0.6
+- GumTree with the Java JDT generator
 
-This project is provided for research purposes.
+Joern is used to analyze intra-procedural def-use relations. GumTree extracts AST edits between repair candidates and the current repair state.
+
+## Repair Configuration
+
+For each bug, PaceFix performs at most three repair rounds and generates up to 15 candidates per round. The total candidate-generation budget is 45, and the temperature is set to 1.
+
+## Patch Evaluation
+
+A patch that passes the complete original test suite is considered plausible. A plausible patch is considered correct if it is semantically equivalent to the intended repair represented by the developer patch.
+
+The evaluation reports the numbers of plausibly and correctly fixed bugs. Each bug is counted at most once for each metric.
+
+## Citation
+
+If you use this implementation or its experimental results, please cite the accompanying PaceFix paper.
